@@ -35,51 +35,83 @@ import androidx.navigation.compose.rememberNavController
 import com.kisahcode.moviesapp.R
 import com.kisahcode.moviesapp.movieList.presentation.MovieListUiEvent
 import com.kisahcode.moviesapp.movieList.presentation.MovieListViewModel
+import com.kisahcode.moviesapp.movieList.presentation.PopularMoviesScreen
+import com.kisahcode.moviesapp.movieList.presentation.UpcomingMoviesScreen
 import com.kisahcode.moviesapp.movieList.util.Screen
 
+/**
+ * A composable function that displays the home screen of the movie app.
+ *
+ * This screen includes a top app bar, a bottom navigation bar, and a content area that switches between
+ * popular and upcoming movie screens based on the user's selection in the bottom navigation bar.
+ *
+ * @param navController The navigation controller for the app's main navigation graph.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController) {
 
+    // ViewModel instance using Hilt for dependency injection
     val movieListViewModel = hiltViewModel<MovieListViewModel>()
+
+    // Collect the state of the movie list from the ViewModel
     val movieListState = movieListViewModel.movieListState.collectAsState().value
+
+    // Navigation controller for the bottom navigation bar
     val bottomNavController = rememberNavController()
 
-    Scaffold(bottomBar = {
-        BottomNavigationBar(
-            bottomNavController = bottomNavController, onEvent = movieListViewModel::onEvent
-        )
-    }, topBar = {
-        TopAppBar(
-            title = {
-                Text(
-                    text = if (movieListState.isCurrentPopularScreen)
-                        stringResource(R.string.popular_movies)
-                    else
-                        stringResource(R.string.upcoming_movies),
-                    fontSize = 20.sp
-                )
-            },
-            modifier = Modifier.shadow(2.dp),
-            colors = TopAppBarDefaults.smallTopAppBarColors(
-                MaterialTheme.colorScheme.inverseOnSurface
+    Scaffold(
+        bottomBar = {
+            // Bottom navigation bar definition
+            BottomNavigationBar(
+                bottomNavController = bottomNavController, onEvent = movieListViewModel::onEvent
             )
-        )
-    }) {
+        }, topBar = {
+            // Top app bar definition
+            TopAppBar(
+                title = {
+                    Text(
+                        // Title changes based on the current screen
+                        text = if (movieListState.isCurrentPopularScreen)
+                            stringResource(R.string.popular_movies)
+                        else
+                            stringResource(R.string.upcoming_movies),
+                        fontSize = 20.sp
+                    )
+                },
+                // Adding a shadow to the top app bar
+                modifier = Modifier.shadow(2.dp),
+                // Setting the colors for the top app bar
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    MaterialTheme.colorScheme.inverseOnSurface
+                )
+            )
+        }
+    ) { innerPadding ->
+        // Box composable to hold the content and apply padding
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(innerPadding)
         ) {
+            // NavHost to manage the navigation between screens
             NavHost(
                 navController = bottomNavController,
                 startDestination = Screen.PopularMovieList.rout
             ) {
                 composable(Screen.PopularMovieList.rout) {
-//                    PopularMoviesScreen()
+                    PopularMoviesScreen(
+                        movieListState,
+                        navController,
+                        onEvent = movieListViewModel::onEvent
+                    )
                 }
                 composable(Screen.UpcomingMovieList.rout) {
-//                    PopularMoviesScreen()
+                    UpcomingMoviesScreen(
+                        movieListState,
+                        navController,
+                        onEvent = movieListViewModel::onEvent
+                    )
                 }
             }
         }
@@ -87,12 +119,19 @@ fun HomeScreen(navController: NavHostController) {
 
 }
 
-
+/**
+ * A composable function that displays a bottom navigation bar for navigating between popular and
+ * upcoming movies.
+ *
+ * @param bottomNavController The navigation controller for the bottom navigation bar.
+ * @param onEvent A callback function to handle navigation events.
+ */
 @Composable
 fun BottomNavigationBar(
     bottomNavController: NavHostController, onEvent: (MovieListUiEvent) -> Unit
 ) {
 
+    // Define the items for the bottom navigation bar
     val items = listOf(
         BottomItem(
             title = stringResource(R.string.popular),
@@ -103,6 +142,7 @@ fun BottomNavigationBar(
         )
     )
 
+    // Remember the selected index using a state variable that survives configuration changes
     val selected = rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -111,6 +151,7 @@ fun BottomNavigationBar(
         Row(
             modifier = Modifier.background(MaterialTheme.colorScheme.inverseOnSurface)
         ) {
+            // Iterate through each bottom navigation item
             items.forEachIndexed { index, bottomItem ->
                 NavigationBarItem(selected = selected.intValue == index, onClick = {
                     selected.intValue = index
@@ -144,6 +185,12 @@ fun BottomNavigationBar(
 
 }
 
+/**
+ * Data class representing an item in the bottom navigation bar.
+ *
+ * @param title The title of the navigation item.
+ * @param icon The icon of the navigation item.
+ */
 data class BottomItem(
     val title: String, val icon: ImageVector
 )
