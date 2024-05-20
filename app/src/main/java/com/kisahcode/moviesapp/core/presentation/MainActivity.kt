@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.kisahcode.moviesapp.movieList.util.Screen
 import com.kisahcode.moviesapp.ui.theme.MoviesAppTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.kisahcode.moviesapp.details.presentation.DetailsScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -57,8 +58,8 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(
                                 navArgument("movieId") { type = NavType.IntType }
                             )
-                        ) { backStackEntry ->
-//                            DetailsScreen(backStackEntry)
+                        ) {
+                            DetailsScreen()
                         }
                     }
 
